@@ -75,6 +75,10 @@ export const subscriptions = {
   subscribe: (plan) => api.post('/subscriptions/subscribe', { plan }),
 };
 
+export const users = {
+  deleteAccount: () => api.delete('/auth/me'),
+};
+
 export const uploads = {
   avatar: (file) => {
     const form = new FormData();

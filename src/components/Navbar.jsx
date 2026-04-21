@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Menu, X, MessageSquare, User, LogOut, ChevronDown } from 'lucide-react';
+import { Menu, X, MessageSquare, User, LogOut, ChevronDown, Settings } from 'lucide-react';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -61,6 +61,9 @@ export default function Navbar() {
                       <Link href="/suscripcion" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-gray-700" onClick={() => setDropdownOpen(false)}>
                         ⭐ Suscripción
                       </Link>
+                      <Link href="/configuracion" className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-gray-700" onClick={() => setDropdownOpen(false)}>
+                        <Settings size={16} /> Configuración
+                      </Link>
                       <hr className="my-1 border-gray-100" />
                       <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-red-600 w-full text-left">
                         <LogOut size={16} /> Cerrar sesión
@@ -93,6 +96,7 @@ export default function Navbar() {
                 <Link href="/dashboard" className="block px-4 py-2 rounded-lg hover:bg-gray-50" onClick={() => setMenuOpen(false)}>Mi panel</Link>
                 <Link href="/chats" className="block px-4 py-2 rounded-lg hover:bg-gray-50" onClick={() => setMenuOpen(false)}>Mensajes</Link>
                 <Link href="/suscripcion" className="block px-4 py-2 rounded-lg hover:bg-gray-50" onClick={() => setMenuOpen(false)}>Suscripción</Link>
+                <Link href="/configuracion" className="block px-4 py-2 rounded-lg hover:bg-gray-50" onClick={() => setMenuOpen(false)}>Configuración</Link>
                 <button onClick={() => { handleLogout(); setMenuOpen(false); }} className="block w-full text-left px-4 py-2 rounded-lg hover:bg-red-50 text-red-600">
                   Cerrar sesión
                 </button>

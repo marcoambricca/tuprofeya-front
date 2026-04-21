@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../../context/AuthContext';
-import { auth as authApi } from '../../../lib/api';
+import { auth as authApi, announcements as announcementsApi } from '../../../lib/api';
 import toast from 'react-hot-toast';
 import { Mail, CheckCircle } from 'lucide-react';
 
@@ -47,9 +47,32 @@ export default function VerifyPage() {
     setLoading(true);
     try {
       await authApi.verify(codeStr);
-      setVerified(true);
       await refreshUser();
-      toast.success('¡Email verificado!');
+
+      const pendingAnn = typeof window !== 'undefined' && localStorage.getItem('pending_announcement');
+      if (pendingAnn) {
+        try {
+          const annData = JSON.parse(pendingAnn);
+          const subject = annData.subject === 'Otro' ? annData.customSubject : annData.subject;
+          await announcementsApi.create({
+            title: annData.title,
+            description: annData.description,
+            subject,
+            price: parseFloat(annData.price),
+            price_type: annData.priceType,
+            level: annData.level,
+            modality: annData.modality,
+          });
+          localStorage.removeItem('pending_announcement');
+          toast.success('¡Email verificado y anuncio publicado!');
+        } catch {
+          toast.success('¡Email verificado!');
+        }
+      } else {
+        toast.success('¡Email verificado!');
+      }
+
+      setVerified(true);
       setTimeout(() => router.push('/dashboard'), 1500);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Código incorrecto');

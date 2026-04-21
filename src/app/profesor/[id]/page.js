@@ -55,7 +55,14 @@ export default function TeacherProfilePage() {
       setRequestModal(null);
       setRequestMessage('');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Error al enviar solicitud');
+      const msg = err.response?.data?.message || '';
+      if (err.response?.status === 403 && (msg.includes('límite') || msg.includes('limite') || msg.includes('plan'))) {
+        setRequestModal(null);
+        toast.error('Alcanzaste el límite de solicitudes de tu plan actual.', { duration: 4000 });
+        router.push('/suscripcion');
+      } else {
+        toast.error(msg || 'Error al enviar solicitud');
+      }
     } finally {
       setRequesting(false);
     }

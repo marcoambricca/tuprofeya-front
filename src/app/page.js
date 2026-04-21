@@ -255,21 +255,38 @@ export default function LandingPage() {
       </section>
 
       {/* REVIEWS */}
-      {latestReviews.length > 0 && (
-        <section className="bg-gray-50 py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-gray-900">Lo que dicen nuestros alumnos</h2>
-              <p className="text-gray-500 mt-2">Experiencias reales de estudiantes en SuperProfe</p>
+      <section className="bg-gray-50 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold text-gray-900">Lo que dicen nuestros alumnos</h2>
+            <p className="text-gray-500 mt-2">Experiencias reales de estudiantes en SuperProfe</p>
+          </div>
+          {loading ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="card p-5 animate-pulse">
+                  <div className="flex gap-3 mb-3">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex-shrink-0" />
+                    <div className="space-y-1.5 flex-1">
+                      <div className="h-4 w-32 bg-gray-200 rounded" />
+                      <div className="h-3 w-20 bg-gray-100 rounded" />
+                    </div>
+                  </div>
+                  <div className="h-3 bg-gray-100 rounded w-full mb-1.5" />
+                  <div className="h-3 bg-gray-100 rounded w-4/5 mb-1.5" />
+                  <div className="h-3 bg-gray-100 rounded w-3/5" />
+                </div>
+              ))}
             </div>
+          ) : latestReviews.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {latestReviews.map((r) => (
                 <ReviewCard key={r.id} review={r} />
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          ) : null}
+        </div>
+      </section>
 
       {/* CTA — Dar clases */}
       <section className="bg-gradient-to-r from-blue-600 to-indigo-700 py-16">

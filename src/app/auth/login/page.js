@@ -72,7 +72,8 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-            <button type="submit" disabled={loading} className="btn-primary w-full text-lg py-3.5">
+            <button type="submit" disabled={loading} className="btn-primary w-full text-lg py-3.5 flex items-center justify-center gap-2">
+              {loading && <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               {loading ? 'Ingresando...' : 'Iniciar sesión'}
             </button>
           </form>

@@ -198,8 +198,9 @@ export default function DarClasesPage() {
             <button
               type="submit"
               disabled={loading || !form.subject || !form.title || !form.description || !form.price}
-              className="btn-primary w-full text-lg py-4"
+              className="btn-primary w-full text-lg py-4 flex items-center justify-center gap-2"
             >
+              {loading && <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
               {loading ? 'Publicando...' : user ? 'Publicar anuncio' : 'Continuar y crear cuenta →'}
             </button>
           </form>

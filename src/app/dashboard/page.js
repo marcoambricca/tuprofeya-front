@@ -13,9 +13,14 @@ import {
   uploads,
 } from '../../lib/api';
 import toast from 'react-hot-toast';
-import { MessageSquare, Plus, Check, X, Star, Bell, Users, BookOpen, Settings, Upload } from 'lucide-react';
+import { MessageSquare, Plus, Check, X, Star, Bell, Users, BookOpen, Settings, Upload, Edit2, ExternalLink } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+
+const SUBJECTS = ['Matemática', 'Física', 'Química', 'Biología', 'Historia', 'Geografía', 'Inglés', 'Francés', 'Portugués', 'Programación', 'Música', 'Arte', 'Otro'];
+const LEVELS = ['todos', 'primaria', 'secundaria', 'universitario', 'adultos'];
+const MODALITIES = ['virtual', 'presencial', 'ambas'];
+const PRICE_TYPES = [{ value: 'hour', label: 'por hora' }, { value: 'class', label: 'por clase' }, { value: 'month', label: 'por mes' }];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -29,6 +34,7 @@ export default function DashboardPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [processingId, setProcessingId] = useState(null);
+  const [editingAnn, setEditingAnn] = useState(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/auth/login');
@@ -70,7 +76,13 @@ export default function DashboardPage() {
       toast.success('Solicitud aceptada. ¡Ya podés chatear!');
       loadData();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Error');
+      const msg = err.response?.data?.message || '';
+      if (err.response?.status === 403 && (msg.includes('límite') || msg.includes('limite') || msg.includes('plan'))) {
+        toast.error('Alcanzaste el límite de alumnos de tu plan.', { duration: 4000 });
+        router.push('/suscripcion');
+      } else {
+        toast.error(msg || 'Error');
+      }
     } finally {
       setProcessingId(null);
     }
@@ -118,7 +130,16 @@ export default function DashboardPage() {
     } catch { toast.error('Error'); }
   };
 
-  if (authLoading || !user) return null;
+  if (authLoading || !user) return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="grid md:grid-cols-3 gap-4 animate-pulse">
+          {[...Array(3)].map((_, i) => <div key={i} className="h-32 bg-white rounded-2xl" />)}
+        </div>
+      </div>
+    </div>
+  );
 
   const pendingRequests = requests.filter((r) => r.status === 'pending');
   const unreadChats = chatList.filter((c) => parseInt(c.unread_count) > 0).length;
@@ -128,6 +149,8 @@ export default function DashboardPage() {
     : ['overview', 'requests', 'chats'];
 
   const TAB_LABELS = { overview: 'Panel', requests: 'Solicitudes', chats: 'Mensajes', announcements: 'Anuncios', profile: 'Mi perfil' };
+
+  const subscriptionLabel = user.role === 'teacher' ? 'alumnos aceptados' : 'solicitudes usadas';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -167,8 +190,14 @@ export default function DashboardPage() {
         </div>
 
         {loadingData ? (
-          <div className="grid md:grid-cols-3 gap-4 animate-pulse">
-            {[...Array(3)].map((_, i) => <div key={i} className="h-32 bg-white rounded-2xl" />)}
+          <div className="space-y-4">
+            <div className="grid md:grid-cols-4 gap-4 animate-pulse">
+              {[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-white rounded-2xl" />)}
+            </div>
+            <div className="h-24 bg-white rounded-2xl animate-pulse" />
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => <div key={i} className="h-20 bg-white rounded-2xl animate-pulse" />)}
+            </div>
           </div>
         ) : (
           <>
@@ -177,7 +206,7 @@ export default function DashboardPage() {
               <div className="space-y-6">
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {user.role === 'teacher' ? [
+                  {(user.role === 'teacher' ? [
                     { label: 'Anuncios activos', value: announcements.filter((a) => a.is_active).length, icon: BookOpen, color: 'text-blue-600 bg-blue-50' },
                     { label: 'Solicitudes pendientes', value: pendingRequests.length, icon: Bell, color: 'text-red-600 bg-red-50' },
                     { label: 'Chats activos', value: chatList.length, icon: MessageSquare, color: 'text-green-600 bg-green-50' },
@@ -187,8 +216,7 @@ export default function DashboardPage() {
                     { label: 'Chats activos', value: chatList.length, icon: MessageSquare, color: 'text-green-600 bg-green-50' },
                     { label: 'Plan actual', value: subscription?.plan || 'inicial', icon: Star, color: 'text-amber-600 bg-amber-50' },
                     { label: 'Mensajes sin leer', value: unreadChats, icon: Bell, color: 'text-red-600 bg-red-50' },
-                  ]}
-                  .map((stat) => (
+                  ]).map((stat) => (
                     <div key={stat.label} className="card p-4">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${stat.color}`}>
                         <stat.icon size={20} />
@@ -199,14 +227,16 @@ export default function DashboardPage() {
                   ))}
                 </div>
 
-                {/* Subscription */}
+                {/* Subscription bar */}
                 {subscription && (
                   <div className="card p-5">
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-semibold text-gray-900">Plan {subscription.plan}</h3>
                         <p className="text-sm text-gray-500 mt-0.5">
-                          {subscription.config?.maxContacts === Infinity ? 'Ilimitado' : `${subscription.contacts_used} / ${subscription.config?.maxContacts}`} contactos usados
+                          {subscription.config?.maxContacts === Infinity
+                            ? 'Ilimitado'
+                            : `${subscription.contacts_used} / ${subscription.config?.maxContacts}`} {subscriptionLabel}
                         </p>
                       </div>
                       <Link href="/suscripcion" className="btn-secondary text-sm">Cambiar plan</Link>
@@ -214,7 +244,7 @@ export default function DashboardPage() {
                     {subscription.config?.maxContacts !== Infinity && (
                       <div className="mt-3 h-2 bg-gray-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-blue-600 rounded-full transition-all"
+                          className="h-full bg-blue-600 rounded-full transition-all duration-500"
                           style={{ width: `${Math.min((subscription.contacts_used / subscription.config.maxContacts) * 100, 100)}%` }}
                         />
                       </div>
@@ -222,8 +252,8 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                {/* Recent requests for teacher */}
-                {pendingRequests.length > 0 && (
+                {/* Recent pending requests — teachers only */}
+                {user.role === 'teacher' && pendingRequests.length > 0 && (
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                       <Bell size={18} className="text-red-500" /> Solicitudes pendientes
@@ -246,7 +276,7 @@ export default function DashboardPage() {
                               disabled={processingId === req.id}
                               className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
                             >
-                              <Check size={14} /> Aceptar
+                              {processingId === req.id ? <div className="w-3 h-3 border-2 border-green-600 border-t-transparent rounded-full animate-spin" /> : <Check size={14} />} Aceptar
                             </button>
                             <button
                               onClick={() => handleReject(req.id)}
@@ -305,12 +335,20 @@ export default function DashboardPage() {
                         {req.status === 'pending' && user.role === 'teacher' && (
                           <div className="flex gap-2">
                             <button onClick={() => handleAccept(req.id)} disabled={processingId === req.id} className="flex items-center gap-1 bg-green-50 hover:bg-green-100 text-green-700 px-3 py-1.5 rounded-lg text-xs font-medium">
-                              <Check size={12} /> Aceptar
+                              {processingId === req.id ? <div className="w-3 h-3 border-2 border-green-600 border-t-transparent rounded-full animate-spin" /> : <Check size={12} />} Aceptar
                             </button>
                             <button onClick={() => handleReject(req.id)} disabled={processingId === req.id} className="flex items-center gap-1 bg-red-50 hover:bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-medium">
                               <X size={12} /> Rechazar
                             </button>
                           </div>
+                        )}
+                        {req.status === 'accepted' && req.chat_id && (
+                          <Link
+                            href={`/chats/${req.chat_id}`}
+                            className="flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                          >
+                            <MessageSquare size={12} /> Abrir chat
+                          </Link>
                         )}
                       </div>
                     </div>
@@ -390,7 +428,10 @@ export default function DashboardPage() {
                         <p className="text-blue-600 font-bold mt-2">${Number(ann.price).toLocaleString('es-AR')}/{ann.price_type === 'hour' ? 'h' : ann.price_type === 'class' ? 'clase' : 'mes'}</p>
                         <p className="text-xs text-gray-400 mt-1">{ann.views} vistas</p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap justify-end">
+                        <button onClick={() => setEditingAnn(ann)} className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 hover:bg-blue-50 font-medium text-blue-600 flex items-center gap-1">
+                          <Edit2 size={12} /> Editar
+                        </button>
                         <button onClick={() => toggleAnnouncement(ann)} className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 font-medium text-gray-600">
                           {ann.is_active ? 'Pausar' : 'Activar'}
                         </button>
@@ -410,6 +451,114 @@ export default function DashboardPage() {
             )}
           </>
         )}
+      </div>
+
+      {/* Edit Announcement Modal */}
+      {editingAnn && (
+        <EditAnnouncementModal
+          ann={editingAnn}
+          onClose={() => setEditingAnn(null)}
+          onSaved={() => { setEditingAnn(null); loadData(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditAnnouncementModal({ ann, onClose, onSaved }) {
+  const [form, setForm] = useState({
+    title: ann.title || '',
+    description: ann.description || '',
+    subject: ann.subject || '',
+    price: ann.price || '',
+    priceType: ann.price_type || 'hour',
+    level: ann.level || 'todos',
+    modality: ann.modality || 'virtual',
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await announcementsApi.update(ann.id, {
+        title: form.title,
+        description: form.description,
+        subject: form.subject,
+        price: parseFloat(form.price),
+        price_type: form.priceType,
+        level: form.level,
+        modality: form.modality,
+      });
+      toast.success('Anuncio actualizado');
+      onSaved();
+    } catch {
+      toast.error('Error al guardar');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto" onClick={onClose}>
+      <div className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl my-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-xl font-bold text-gray-900">Editar anuncio</h3>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg"><X size={18} /></button>
+        </div>
+        <form onSubmit={handleSave} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Materia</label>
+            <div className="grid grid-cols-3 gap-2">
+              {SUBJECTS.map((s) => (
+                <button key={s} type="button" onClick={() => setForm({ ...form, subject: s })}
+                  className={`py-1.5 px-2 rounded-xl text-xs font-medium border-2 transition-all ${form.subject === s ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 hover:border-gray-300 text-gray-600'}`}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Título</label>
+            <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="input-field" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Descripción</label>
+            <textarea required rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="input-field resize-none" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Precio (ARS)</label>
+              <input type="number" required min="0" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="input-field" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Modalidad de cobro</label>
+              <select value={form.priceType} onChange={(e) => setForm({ ...form, priceType: e.target.value })} className="input-field">
+                {PRICE_TYPES.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Nivel</label>
+              <select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })} className="input-field">
+                {LEVELS.map((l) => <option key={l} value={l}>{l === 'todos' ? 'Todos' : l.charAt(0).toUpperCase() + l.slice(1)}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Modalidad</label>
+              <select value={form.modality} onChange={(e) => setForm({ ...form, modality: e.target.value })} className="input-field">
+                {MODALITIES.map((m) => <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="btn-ghost flex-1">Cancelar</button>
+            <button type="submit" disabled={saving} className="btn-primary flex-1">
+              {saving ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Guardando...</span> : 'Guardar cambios'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -466,7 +615,9 @@ function TeacherProfileEditor({ profile, onSaved }) {
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Aptitudes (separadas por coma)</label>
         <input value={form.aptitudes} onChange={(e) => setForm({ ...form, aptitudes: e.target.value })} className="input-field" placeholder="Paciencia, Material didáctico, Clases personalizadas" />
       </div>
-      <button onClick={handleSave} disabled={saving} className="btn-primary">{saving ? 'Guardando...' : 'Guardar cambios'}</button>
+      <button onClick={handleSave} disabled={saving} className="btn-primary">
+        {saving ? <span className="flex items-center justify-center gap-2"><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />Guardando...</span> : 'Guardar cambios'}
+      </button>
     </div>
   );
 }
