@@ -69,6 +69,16 @@ export default function DashboardPage() {
     }
   };
 
+  const handleNewAnnouncement = () => {
+    const activeCount = announcements.filter(a => a.is_active).length;
+      if (activeCount >= subscription?.config?.maxAnnouncements) {
+        toast.error('Alcanzaste el límite de anuncios activos de tu plan.', { duration: 4000 });
+        router.push('/suscripcion');
+        return;
+    }
+    router.push('/dar-clases');
+};
+
   const handleAccept = async (id) => {
     setProcessingId(id);
     try {
@@ -114,6 +124,15 @@ export default function DashboardPage() {
   };
 
   const toggleAnnouncement = async (ann) => {
+  // Solo validar si está siendo ACTIVADO (no pausado)
+    if (!ann.is_active) {
+      const activeCount = announcements.filter(a => a.is_active).length;
+      if (activeCount >= subscription?.config?.maxAnnouncements) {
+        toast.error('Alcanzaste el límite de anuncios activos de tu plan.', { duration: 4000 });
+        router.push('/suscripcion');
+        return;
+      }
+    }
     try {
       await announcementsApi.update(ann.id, { is_active: !ann.is_active });
       toast.success(ann.is_active ? 'Anuncio pausado' : 'Anuncio activado');
@@ -403,9 +422,9 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="font-bold text-gray-900 text-lg">Mis anuncios</h2>
-                  <Link href="/dar-clases" className="btn-primary text-sm flex items-center gap-1">
-                    <Plus size={15} /> Nuevo
-                  </Link>
+                  <button onClick={handleNewAnnouncement} className="btn-primary flex items-center gap-2 text-sm">
+                    <Plus size={16} /> Nuevo anuncio
+                  </button>
                 </div>
                 {announcements.length === 0 ? (
                   <div className="card p-12 text-center text-gray-400">

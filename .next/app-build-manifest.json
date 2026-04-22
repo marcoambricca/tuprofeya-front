@@ -16,45 +16,35 @@
       "static/chunks/main-app.js",
       "static/chunks/app/loading.js"
     ],
-    "/auth/login/page": [
+    "/buscar/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/auth/login/page.js"
+      "static/chunks/app/buscar/page.js"
     ],
     "/dashboard/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/page.js"
     ],
-    "/configuracion/page": [
+    "/auth/login/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/configuracion/page.js"
-    ],
-    "/chats/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/chats/page.js"
-    ],
-    "/buscar/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/buscar/page.js"
-    ],
-    "/profesor/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/profesor/[id]/page.js"
-    ],
-    "/chats/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/chats/[id]/page.js"
+      "static/chunks/app/auth/login/page.js"
     ],
     "/suscripcion/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/suscripcion/page.js"
+    ],
+    "/dar-clases/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dar-clases/page.js"
+    ],
+    "/profesor/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/profesor/[id]/page.js"
     ],
     "/_not-found/page": [
       "static/chunks/webpack.js",
